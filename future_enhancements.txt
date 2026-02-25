@@ -1,0 +1,21 @@
+✨ FUTURE ENHANCEMENTS FOR BALLOON TODO ✨
+
+--- AESTHETIC ENHANCEMENTS ---
+* 3D Balloon Shading: Add subtle radial gradients to balloons for a glossy, realistic latex look.
+* Dynamic Time of Day: Shift sky colors based on local time (Sunrise, Noon, Sunset, Night).
+* Parallax Clouds: Multiple layers of clouds moving at different speeds to create depth.
+* Shape Variety: Different balloon shapes (Hearts, Stars) for different task categories.
+
+--- INTERACTIVE POLISH ---
+* Sound Effects: Gentle whooshes for movement, soft thumps for collisions, and satisfying pops for completion.
+* Drag & Toss: Allow manual dragging and energetic tossing of balloons against the walls.
+* Wind Physics: Make threads react dynamically to balloon velocity and air resistance.
+
+--- UTILITY & PRODUCTIVITY ---
+* Persistence: Implement localStorage to save balloons between browser sessions.
+* Priority via Size: Scale balloon size based on task importance.pus
+* Urgency "Sagging": Balloons lose buoyancy and sink lower as deadlines approach.
+* Task Clustering: Ability to tie related balloons together into projects.
+
+--- GAMIFICATION ---
+* Pop Counter: A dashboard stat tracking how many balloons have been popped over time.

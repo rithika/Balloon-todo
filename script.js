@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sky = document.getElementById('sky');
     const skyBackground = document.getElementById('sky-background');
     const controls = document.getElementById('controls');
+    const categorySelect = document.getElementById('category-select');
 
     const render = Render.create({
         canvas: canvas,
@@ -106,22 +107,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addButton.addEventListener('click', () => {
         const todoText = todoInput.value.trim();
+        const category = categorySelect.value;
         if (todoText) {
-            createBalloon(todoText);
+            createBalloon(todoText, category);
             todoInput.value = '';
         }
     });
 
-    function createBalloon(text) {
+    function createBalloon(text, category) {
         const size = Math.random() * 20 + 30;
         const x = Math.random() * (skyBackground.clientWidth - size * 2) + size;
         const y = skyBackground.clientHeight;
 
-        const balloonColor = ['#FFB7CE', '#BFFCC6', '#C5B4E3', '#FAD5A5'][Math.floor(Math.random() * 4)];
+        let balloonColor;
+        if (category === 'work') {
+            balloonColor = '#FEFD96'; // Pastel Yellow
+        } else if (category === 'personal') {
+            balloonColor = ['#FFB7CE', '#FFADAD'][Math.floor(Math.random() * 2)]; // Pastel Pink or Red
+        } else {
+            // Misc - 5 color band
+            balloonColor = ['#FFB7CE', '#BFFCC6', '#C5B4E3', '#FAD5A5', '#FEFD96'][Math.floor(Math.random() * 5)];
+        }
 
         const balloonBody = Bodies.circle(x, y, size, {
             restitution: 0.6,
             frictionAir: 0.08, // --- Increased friction for milder float ---
+            inertia: Infinity, // Keep the balloon upright
             render: { fillStyle: 'transparent' },
             collisionFilter: {
                 category: balloonCategory,
@@ -132,12 +143,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const balloonElement = document.createElement('div');
         balloonElement.classList.add('balloon');
+        if (category === 'personal') balloonElement.classList.add('heart');
+        if (category === 'work') balloonElement.classList.add('star');
+
         requestAnimationFrame(() => {
             balloonElement.classList.add('added');
         });
         balloonElement.style.width = `${size * 2}px`;
-        balloonElement.style.height = `${size * 2 * 1.2}px`;
-        balloonElement.style.backgroundColor = balloonColor;
+        balloonElement.style.height = `${size * 2 * (category === 'personal' || category === 'work' ? 1 : 1.2)}px`;
+        
+        // Glossy radial gradient
+        balloonElement.style.background = `radial-gradient(circle at 30% 30%, #ffffff 0%, ${balloonColor} 20%, ${balloonColor} 100%)`;
         balloonElement.style.color = balloonColor; // For the knot border-top-color
 
         const tooltip = document.createElement('div');
@@ -176,7 +192,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // --- Centered Tail Attachment ---
             if (i === 0) {
-                constraintOptions.pointA = { x: 0, y: size }; // Attach to bottom of balloon
+                // Attach slightly higher for special shapes to match visual bottom
+                const yOffset = category === 'personal' ? size : size;
+                constraintOptions.pointA = { x: 0, y: yOffset };
             }
 
             const constraint = Constraint.create(constraintOptions);
@@ -197,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modal: modal,
             targetY: targetY,
             size: size,
+            category: category,
             driftPhase: Math.random() * Math.PI * 2,
             color: balloonColor
         };
@@ -327,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modalTop + modalRect.height > skyBackground.clientHeight) {
                 modalTop = skyBackground.clientHeight - modalRect.height - 10;
             }
+            
 
             modal.style.top = `${modalTop}px`;
             modal.style.left = `${modalLeft}px`;
@@ -352,10 +372,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.beginPath();
             // Start at the bottom of the balloon
             const angle = balloon.body.angle;
-            const cos = Math.cos(angle);
-            const sin = Math.sin(angle);
-            const startX = balloon.body.position.x + (-sin * 0 + cos * 0);
-            const startY = balloon.body.position.y + (sin * 0 + cos * balloon.size);
+            
+            // Standard height is size*1.2, heart/star is size*1.0
+            const visualHeight = balloon.category === 'personal' || balloon.category === 'work' ? balloon.size : balloon.size * 1.2;
+            
+            const startX = balloon.body.position.x - visualHeight * Math.sin(angle);
+            const startY = balloon.body.position.y + visualHeight * Math.cos(angle);
             
             ctx.moveTo(startX, startY);
 
@@ -380,13 +402,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const driftOffset = Math.sin(balloon.driftPhase) * 50;
                 const currentTargetY = balloon.targetY + driftOffset;
 
+                // Gentle horizontal sway
+                const swayForce = Math.sin(balloon.driftPhase * 1.5) * 0.0004 * body.mass;
+
                 const dy = currentTargetY - body.position.y;
                 const verticalForce = dy * 0.00005; 
                 const floatingForce = -0.0042 * body.mass; // Slightly increased buoyancy
-                const horizontalForce = (Math.random() - 0.5) * 0.0005;
+                const horizontalForce = (Math.random() - 0.5) * 0.0002; // Reduced random noise
 
                 Body.applyForce(body, body.position, {
-                    x: horizontalForce,
+                    x: swayForce + horizontalForce,
                     y: floatingForce + verticalForce, 
                 });
             }
